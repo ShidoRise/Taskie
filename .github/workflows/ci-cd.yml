@@ -1,4 +1,4 @@
-name: Flutter Taskie CI
+name: Flutter Taskie CI/CD
 
 on:
   push:
@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v3
@@ -30,36 +32,55 @@ jobs:
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Run tests
-        run: flutter test
+      - name: Run tests with coverage
+        run: |
+          flutter test --coverage # Chạy test và tạo file coverage
+          sudo apt-get install -y lcov # Cài lcov để xử lý coverage (nếu cần)
 
       - name: Build APK
         run: flutter build apk --release
 
-      - name: Upload APK
+      - name: Collect metrics (build success)
+        run: |
+          chmod +x scripts/collect_metrics.sh
+          ./scripts/collect_metrics.sh "success"
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics
+          path: metrics.csv
+
   release:
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-      issues: write
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Download APK artifact
         uses: actions/download-artifact@v4
         with:
           name: app-release
           path: ./apk
+
+      - name: Download metrics artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: metrics
+          path: .
 
       - name: Create Release
         id: create_release
@@ -81,3 +102,35 @@ jobs:
           asset_path: ./apk/app-release.apk
           asset_name: app-release.apk
           asset_content_type: application/vnd.android.package-archive
+
+      - name: Collect metrics (release success)
+        run: |
+          chmod +x scripts/collect_metrics.sh
+          ./scripts/collect_metrics.sh "success"
+
+      - name: Upload final metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-final
+          path: metrics.csv
+
+  on-failure:
+    needs: [build, release]
+    runs-on: ubuntu-latest
+    if: failure()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Collect metrics (failure)
+        run: |
+          chmod +x scripts/collect_metrics.sh
+          ./scripts/collect_metrics.sh "failure"
+
+      - name: Upload metrics artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: metrics-failure
+          path: metrics.csv
