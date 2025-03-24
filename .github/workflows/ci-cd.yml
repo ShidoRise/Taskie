@@ -46,6 +46,10 @@ jobs:
   release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     if: github.ref == 'refs/heads/main'
     steps:
       - name: Checkout code
