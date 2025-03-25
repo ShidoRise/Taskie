@@ -1,4 +1,4 @@
-name: Flutter Taskie CI/CD
+name: Flutter CI/CD
 
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.27.4"
+          flutter-version: "3.19.0"
           channel: "stable"
 
       - name: Get dependencies
@@ -34,11 +34,14 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          flutter test --coverage # Chạy test và tạo file coverage
-          sudo apt-get install -y lcov # Cài lcov để xử lý coverage (nếu cần)
+          flutter test --coverage
+          sudo apt-get install -y lcov
 
       - name: Build APK
         run: flutter build apk --release
+
+      - name: Build Web
+        run: flutter build web --release
 
       - name: Collect metrics (build success)
         run: |
@@ -50,6 +53,13 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload Web artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-release
+          path: build/web
           retention-days: 30
 
       - name: Upload metrics artifact
@@ -75,6 +85,12 @@ jobs:
         with:
           name: app-release
           path: ./apk
+
+      - name: Download Web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-release
+          path: ./web
 
       - name: Download metrics artifact
         uses: actions/download-artifact@v4
@@ -102,6 +118,12 @@ jobs:
           asset_path: ./apk/app-release.apk
           asset_name: app-release.apk
           asset_content_type: application/vnd.android.package-archive
+
+      - name: Deploy Web to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web
 
       - name: Collect metrics (release success)
         run: |
