@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Time and Task Management',
+      title: 'Taskie',
       debugShowCheckedModeBanner: false,
       color: Colors.white,
       theme: ThemeData(
