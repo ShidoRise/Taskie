@@ -82753,7 +82753,7 @@ s.wo()
 return s},
 $S:504}
 A.Jy.prototype={
-I(a){return new A.ya(B.H9,"Time and Task Management",A.to(B.JC,B.Ka,null,B.LC,B.PB,"Nunito",B.j,!0),B.j,!1,null)}}
+I(a){return new A.ya(B.H9,"Taskie",A.to(B.JC,B.Ka,null,B.LC,B.PB,"Nunito",B.j,!0),B.j,!1,null)}}
 A.eu.prototype={
 jr(){var s=this
 return A.av(["id",s.a,"date",s.b.V0(),"fromTime",s.c,"toTime",s.d,"eventTitle",s.e,"eventDetails",s.f],t.N,t.z)},
